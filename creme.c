@@ -7,6 +7,8 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <ifaddrs.h>
+#include <netdb.h>
 #include "creme.h"
 
 #define PORT 9998
@@ -119,6 +121,8 @@ static void *serveur_udp(void *p) {
     char msg_out[LBUF+1];
     int on = 1;
     int n;
+    struct ifaddrs *ifaddr, *ifa;
+    char host[NI_MAXHOST];
 
     if ((sid = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) return NULL;
     if (setsockopt(sid, SOL_SOCKET, SO_BROADCAST, &on, sizeof(on)) < 0) return NULL;
@@ -130,13 +134,27 @@ static void *serveur_udp(void *p) {
 
     if (bind(sid, (struct sockaddr *) &SockConf, sizeof(SockConf)) == -1) return NULL;
 
-    bzero(&SockBcast, sizeof(SockBcast));
-    SockBcast.sin_family = AF_INET;
-    SockBcast.sin_addr.s_addr = inet_addr("192.168.88.255");
-    SockBcast.sin_port = htons(PORT);
-
     sprintf(msg_out, "1BEUIP%s", my_pseudo);
-    sendto(sid, msg_out, strlen(msg_out), 0, (struct sockaddr *)&SockBcast, sizeof(SockBcast));
+
+    if (getifaddrs(&ifaddr) != -1) {
+        for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+            if (ifa->ifa_addr == NULL || ifa->ifa_addr->sa_family != AF_INET)
+                continue;
+
+            if (ifa->ifa_broadaddr != NULL) {
+                if (getnameinfo(ifa->ifa_broadaddr, sizeof(struct sockaddr_in), host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST) == 0) {
+                    if (strcmp(host, "127.0.0.1") != 0 && strcmp(host, "0.0.0.0") != 0) {
+                        bzero(&SockBcast, sizeof(SockBcast));
+                        SockBcast.sin_family = AF_INET;
+                        SockBcast.sin_addr.s_addr = inet_addr(host);
+                        SockBcast.sin_port = htons(PORT);
+                        sendto(sid, msg_out, strlen(msg_out), 0, (struct sockaddr *)&SockBcast, sizeof(SockBcast));
+                    }
+                }
+            }
+        }
+        freeifaddrs(ifaddr);
+    }
 
     add_user(inet_addr("127.0.0.1"), my_pseudo);
 
