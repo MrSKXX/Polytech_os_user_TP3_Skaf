@@ -67,11 +67,14 @@ int CommandeBeuip(int N, char **P)
         beuip_stop();
     } else if (strcmp(P[1], "list") == 0) {
         beuip_liste();
+    } else if (strcmp(P[1], "ls") == 0 && N >= 3) {
+        beuip_ls(P[2]);
+    } else if (strcmp(P[1], "get") == 0 && N >= 4) {
+        beuip_get(P[2], P[3]);
     } else if (strcmp(P[1], "message") == 0 && N >= 4) {
         char msg[1024] = "";
         int i;
         
-        /* Concatenation des mots du message separes par des espaces */
         for (i = 3; i < N; i++) {
             strcat(msg, P[i]);
             if (i < N - 1) strcat(msg, " ");
