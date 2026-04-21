@@ -18,6 +18,7 @@ creme.o: creme.c creme.h
 
 memory-leak: clean
 	$(CC) -g -O0 -Wall -Werror -o biceps-memory-leaks biceps.c gescom.c creme.c $(LDFLAGS)
+	$(CC) -g -O0 -Wall -Werror -o biceps biceps.c gescom.c creme.c $(LDFLAGS)
 
 clean:
 	rm -f biceps biceps-memory-leaks *.o
