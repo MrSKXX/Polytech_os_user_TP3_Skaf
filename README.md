@@ -61,8 +61,11 @@ messagerie réseau décentralisée et un serveur TCP pour l'échange de fichiers
 ## Vérification mémoire
 
 Test standard recommandé :
+
+​```
 make memory-leak
 valgrind --leak-check=full --track-origins=yes --error-exitcode=1 ./biceps-memory-leaks
+​```
 
 Le code utilisateur ne présente aucune fuite : `definitely lost`,
 `indirectly lost` et `possibly lost` sont tous à 0.
